@@ -6,7 +6,7 @@ pygame.init()
 
 screen = pygame.display.set_mode((1280, 720))
 
-rectangle = pygame.image.load("Turtle.png").convert_alpha()
+rectangle = pygame.image.load("Turtle1.png").convert_alpha()
 
 print(type(rectangle))
 angle = 0
