@@ -1,16 +1,16 @@
 import numpy
 import pygame
-from Entities import Entity
-from Sprite import Sprite
-from imageGroup import ImageGroup
+import Entities
+import Sprite
+import imageGroup
 import Constants as Cs
 from pathlib import Path
 from bullets import Bullet
-from manager import Manager
+import manager
 from typing import Dict
 
 
-class Spaceship(Entity):
+class Spaceship(Entities.Entity):
     def __init__(self, pos: numpy.array, angularDisplacement: float, model: str, moveset: Dict[str, int]):
         self.model = model
         self.spritePath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Spaceship') / Path(model) / Path(
@@ -20,10 +20,10 @@ class Spaceship(Entity):
             image = pygame.image.load(str(inPath)).convert_alpha()
             return image
 
-        self.Images = ImageGroup(imageFolderPath=self.spritePath,
-                                 imageLoader=imageLoader)
+        self.Images = imageGroup.ImageGroup(imageFolderPath=self.spritePath,
+                                            imageLoader=imageLoader)
 
-        self.Sprite = Sprite(self.Images, Cs.spaceshipScaleConst, Cs.spacehipUpdateInterval, (pos[0], pos[1]))
+        self.Sprite = Sprite.Sprite(self.Images, Cs.spaceshipScaleConst, Cs.spacehipUpdateInterval, (pos[0], pos[1]))
         self.thrustOn = False
         self.health = 1
         self.damagePerBullet = Cs.DEFAULTDAMAGE
@@ -57,7 +57,7 @@ class Spaceship(Entity):
     def noRotate(self):
         self.angularAcceleration = -Cs.AngularDAMP * self.angularSpeed
 
-    def shoot(self, manager: Manager):
+    def shoot(self, manager: manager.Manager):
         newBullet = Bullet(self.spriteGroup.currentRect.midtop, self.angularDisplacement, self.model, self,
                            self.bulletSpeed)
         manager.addBullet(newBullet)

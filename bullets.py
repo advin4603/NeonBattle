@@ -1,16 +1,16 @@
 import pygame
 import numpy
-from Entities import Entity
-from spaceship import Spaceship
-from imageGroup import ImageGroup
-from Sprite import Sprite
+import Entities
+import spaceship
+import imageGroup
+import Sprite
 import Constants as Cs
 from math import sin, cos, radians
 from pathlib import Path
 
 
-class Bullet(Entity):
-    def __init__(self, pos: numpy.array, angle: float, model: str, parent: Spaceship, bulletSpeed: float):
+class Bullet(Entities.Entity):
+    def __init__(self, pos: numpy.array, angle: float, model: str, parent: spaceship.Spaceship, bulletSpeed: float):
         self.parent = parent
         self.spritePath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Bullet') / Path(model) / Path(
             'Solid')
@@ -19,9 +19,9 @@ class Bullet(Entity):
             image = pygame.image.load(str(inPath)).convert_alpha()
             return image
 
-        self.Images = ImageGroup(imageFolderPath=self.spritePath,
-                                 imageLoader=imageLoader)
-        self.Sprite = Sprite(self.Images, Cs.bulletScaleConst, Cs.bulletUpdateInterval, (pos[0], pos[1]))
+        self.Images = imageGroup.ImageGroup(imageFolderPath=self.spritePath,
+                                            imageLoader=imageLoader)
+        self.Sprite = Sprite.Sprite(self.Images, Cs.bulletScaleConst, Cs.bulletUpdateInterval, (pos[0], pos[1]))
         self.bulletHalfHeight = self.Sprite.currentRect.H / 2
         self.direction = numpy.array([sin(radians(angle)), cos(radians(angle))])
         self.Pos = pos + (Cs.BULLETSPAWNDIST + self.bulletHalfHeight) * self.direction
