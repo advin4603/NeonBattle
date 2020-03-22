@@ -7,18 +7,31 @@ import pygame
 from powerUps import *
 from random import choices, randint
 
-from typing import Dict
+from typing import Dict, List, Callable
 from pathlib import Path
 
 
 class Manager:
-    def __init__(self, display: pygame.Surface, bulletCache: Dict[Path, pygame.Surface], *args: GameEntities.Spaceship):
+    def __init__(self, display: pygame.Surface, bulletCache: Dict[Path, pygame.Surface], *args: GameEntities.Spaceship,
+                 beforeInput: List[Callable] = None,
+                 beforeUpdate: List[Callable] = None,
+                 beforeCollision: List[Callable] = None,
+                 beforeDraw: List[Callable] = None,
+                 afterDraw: List[Callable] = None
+                 ):
         self.spaceships = list(args)
         self.bullets = []
         self.display = display
         self.PowerUpManager = PowerUpManager()
         self.currentGravity = Cs.DEFAULTGRAVITY
         self.bulletCache = bulletCache
+        self.beforeInput = beforeInput if beforeInput is not None else []
+        self.beforeUpdate = beforeUpdate if beforeUpdate is not None else []
+        self.beforeCollision = beforeCollision if beforeCollision is not None else []
+        self.beforeDraw = beforeDraw if beforeDraw is not None else []
+        self.afterDraw = afterDraw if afterDraw is not None else []
+        self.schedule: List[Callable] = self.beforeInput + [self.InputCheck] + self.beforeUpdate + [
+            self.updateAll] + self.beforeCollision + [self.doCollision] + self.beforeDraw + [self.draw] + self.afterDraw
 
     def addBullet(self, *args: GameEntities.Bullet):
         self.bullets.extend(args)
@@ -48,9 +61,17 @@ class Manager:
         for index, entity in enumerate(self.spaceships + self.bullets):
             if isinstance(entity, GameEntities.Bullet):
                 if entity.offScreen:
-                    self.bullets.pop(index)
-            entity.Update(acc=entity.acc + self.currentGravity)
-        self.PowerUpManager.updatePowerUps()
+                    self.bullets.pop(index - len(self.spaceships))
+                else:
+                    entity.Update(acc=entity.acc + self.currentGravity)
+                    self.PowerUpManager.updatePowerUps()
+
+            else:
+                if entity.health <= 0:
+                    self.spaceships.pop(index)
+                else:
+                    entity.Update(acc=entity.acc + self.currentGravity)
+                    self.PowerUpManager.updatePowerUps()
 
     def doCollision(self):
         for index, bullet in enumerate(self.bullets):
@@ -59,6 +80,14 @@ class Manager:
                     ent.hit(bullet)
                     if bullet.killOnImpact:
                         self.bullets.pop(index)
+
+    def draw(self):
+        for ent in self.PowerUpManager.spawnedPowerUps + self.spaceships + self.bullets:
+            ent.drawEntity(self.display)
+
+    def completeCycle(self):
+        for func in self.schedule:
+            func()
 
 
 class PowerUpManager:
