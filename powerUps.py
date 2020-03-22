@@ -1,5 +1,5 @@
 import Entities
-from GameEntities import Spaceship
+from GameEntities import Bullet
 import Sprite
 import imageGroup
 from pathlib import Path
@@ -27,7 +27,5 @@ class PowerUp(Entities.Entity):
         super().__init__(posVector=pos, sprite=self.Sprite, limPos=numpy.array(Cs.GameStage), angularAcc=0,
                          angularSpeed=0, angularDisplacement=0)
 
-    def apply(self, ship: Spaceship):
+    def hit(self, bullet: Bullet):
         pass
-
-

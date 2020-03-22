@@ -7,21 +7,24 @@ import Sprite
 import Constants as Cs
 from math import sin, cos, radians
 from pathlib import Path
-
 from typing import Dict
 
-
+# bulletsPath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Bullet')
+# bulletImageFilePaths = bulletsPath.rglob('*[0-9].png')
+# bulletCache = {pth: pygame.image.load(str(pth)).convert_alpha() for pth in bulletImageFilePaths}
 
 
 class Bullet(Entities.Entity):
 
-    def __init__(self, pos: numpy.array, angle: float, model: str, parent: Spaceship, bulletSpeed: float):
+    def __init__(self, pos: numpy.array, angle: float, model: str, parent: Spaceship, bulletSpeed: float,
+                 killOnImpact: bool, bulletCache: Dict[Path, pygame.Surface]):
         self.parent = parent
         self.spritePath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Bullet') / Path(model) / Path(
             'Solid')
+        self.bulletCache = bulletCache
 
         def imageLoader(inPath: Path):
-            image = pygame.image.load(str(inPath)).convert_alpha()
+            image = self.bulletCache[inPath]
             return image
 
         self.Images = imageGroup.ImageGroup(imageFolderPath=self.spritePath,
@@ -33,6 +36,7 @@ class Bullet(Entities.Entity):
 
         self.damage = parent.damagePerBullet
         self.offScreen = False
+        self.killOnImpact = killOnImpact
 
         super().__init__(posVector=self.Pos,
                          velVector=bulletSpeed * self.direction,
@@ -49,6 +53,7 @@ class Bullet(Entities.Entity):
 
 
 class Spaceship(Entities.Entity):
+
     def __init__(self, pos: numpy.array, angularDisplacement: float, model: str, moveset: Dict[str, int]):
         self.model = model
         self.spritePath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Spaceship') / Path(model) / Path(
@@ -70,6 +75,8 @@ class Spaceship(Entities.Entity):
         self.leftKey = moveset['LEFT']
         self.rightKey = moveset['RIGHT']
         self.shootKey = moveset['SHOOT']
+        self.damageDamp = 1
+        self.piercingBullets = False
         super().__init__(sprite=self.Sprite,
                          angularDisplacement=angularDisplacement,
                          angularSpeed=0.,
@@ -95,7 +102,15 @@ class Spaceship(Entities.Entity):
     def noRotate(self):
         self.angularAcceleration = -Cs.AngularDAMP * self.angularSpeed
 
-    def shoot(self, manager: 'Manager'):
+    def shoot(self, manager, bulletCache):
+        """
+
+        :type manager: manager.Manager
+        :type bulletCache: Dict[Path, pygame.surface]
+        """
         newBullet = Bullet(self.spriteGroup.currentRect.midtop, self.angularDisplacement, self.model, self,
-                           self.bulletSpeed)
+                           self.bulletSpeed, self.piercingBullets, bulletCache)
         manager.addBullet(newBullet)
+
+    def hit(self, bullet: Bullet):
+        self.health -= bullet.damage * self.damageDamp

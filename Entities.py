@@ -135,16 +135,16 @@ if __name__ == '__main__':
 
     Ship1ImageGroup = imageGroup.ImageGroup(Path('TestSprite2'), ImageLoader)
     Ship1ImageGroup2 = imageGroup.ImageGroup(Path('TestSprite3'), ImageLoader)
-    Ship1Sprite = Sprite.Sprite(Ship1ImageGroup, 1., 9, (0, 0))
-    Ship1Sprite2 = Sprite.Sprite(Ship1ImageGroup2, 1., 9, (0, 0))
+    Ship1Sprite = Sprite.Sprite(Ship1ImageGroup, (1.,1.), 9, (0, 0))
+    Ship1Sprite2 = Sprite.Sprite(Ship1ImageGroup2, (1.,1), 9, (0, 0))
     Ship1 = Entity(Ship1Sprite, 0, 0, 0, numpy.array([640., 360.]), velVector=numpy.array([0., 3.]),
                    accVector=numpy.array([0., 0.01]),
                    limPos=numpy.array([[0, 1280], [0, 720]]),
                    limVelScalar=10)
     Ship2ImageGroup = imageGroup.ImageGroup(Path('TestSprite2'), ImageLoader)
     Ship2ImageGroup2 = imageGroup.ImageGroup(Path('TestSprite3'), ImageLoader)
-    Ship2Sprite = Sprite.Sprite(Ship2ImageGroup, 1., 9, (0, 0))
-    Ship2Sprite2 = Sprite.Sprite(Ship2ImageGroup2, 1., 9, (0, 0))
+    Ship2Sprite = Sprite.Sprite(Ship2ImageGroup, (1.,1.), 9, (0, 0))
+    Ship2Sprite2 = Sprite.Sprite(Ship2ImageGroup2, (1.,1.), 9, (0, 0))
     Ship2 = Entity(Ship2Sprite, 0, 0, 0, numpy.array([360., 640.]), velVector=numpy.array([0., 3.]),
                    limPos=numpy.array([[0, 1280], [0, 720]]))
     print(Ship1 is Ship2)
