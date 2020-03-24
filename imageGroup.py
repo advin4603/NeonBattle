@@ -4,8 +4,12 @@ from typing import Callable, Tuple
 
 class ImageGroup:
     def __init__(self, imageFolderPath: Path, imageLoader: Callable):
-        self.allImageFilePaths = imageFolderPath.glob('*[0-9].png')
+        print(imageFolderPath)
+        self.allImageFilePaths = list(imageFolderPath.glob('*[0-9].png'))
+        print(self.allImageFilePaths)
         self.allImages = list(map(imageLoader, self.allImageFilePaths))
+        if not self.allImages:
+            raise Exception('Image Not Found')
 
     def transformAll(self, func: Callable):
         self.allImages = list(map(func, self.allImages))

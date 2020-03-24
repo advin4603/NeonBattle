@@ -33,45 +33,52 @@ class Manager:
         self.schedule: List[Callable] = self.beforeInput + [self.InputCheck] + self.beforeUpdate + [
             self.updateAll] + self.beforeCollision + [self.doCollision] + self.beforeDraw + [self.draw] + self.afterDraw
 
-    def addBullet(self, *args: GameEntities.Bullet):
-        self.bullets.extend(args)
+    def addBullet(self, bul: GameEntities.Bullet):
+        self.bullets.append(bul)
 
     def InputCheck(self):
         keys = pygame.key.get_pressed()
-        for event in pygame.event.get():
-            for ship in self.spaceships:
+        events = list(pygame.event.get())
+        for ship in self.spaceships:
 
+            for event in events:
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
                     if event.key == ship.shootKey:
                         ship.shoot(self, self.bulletCache)
 
-                if keys[ship.thrustKey]:
-                    ship.thrust()
-                else:
-                    ship.decelerate()
+            if keys[ship.thrustKey]:
+                ship.thrust()
 
-                if keys[ship.leftKey] and not keys[ship.rightKey]:
-                    ship.rotateLeft()
-                elif keys[ship.rightKey] and not keys[ship.leftKey]:
-                    ship.rotateRight()
-                else:
-                    ship.noRotate()
+            else:
+                ship.decelerate()
+
+            if keys[ship.leftKey] and not keys[ship.rightKey]:
+                ship.rotateLeft()
+            elif keys[ship.rightKey] and not keys[ship.leftKey]:
+
+                ship.rotateRight()
+            else:
+                ship.noRotate()
 
     def updateAll(self):
         for index, entity in enumerate(self.spaceships + self.bullets):
             if isinstance(entity, GameEntities.Bullet):
                 if entity.offScreen:
+                    print(index)
                     self.bullets.pop(index - len(self.spaceships))
                 else:
-                    entity.Update(acc=entity.acc + self.currentGravity)
-                    self.PowerUpManager.updatePowerUps()
-
+                    entity.Update()
             else:
                 if entity.health <= 0:
                     self.spaceships.pop(index)
                 else:
-                    entity.Update(acc=entity.acc + self.currentGravity)
-                    self.PowerUpManager.updatePowerUps()
+                    entity.Update()
+        self.PowerUpManager.updatePowerUps()
 
     def doCollision(self):
         for index, bullet in enumerate(self.bullets):
@@ -114,6 +121,34 @@ class PowerUpManager:
         if self.spawnInterval == 1:
             self.spawnedPowerUps.clear()
             self.spawnInterval = Cs.PowerUpSpawnInterval
-            self.spawnedPowerUps.extend(choices(self.Powers, self.Probabilities, k=randint(*Cs.PowerUpSpawnRange)))
+            # self.spawnedPowerUps.extend(choices(self.Powers, self.Probabilities, k=randint(*Cs.PowerUpSpawnRange)))
         else:
             self.spawnInterval -= 1
+
+
+if __name__ == '__main__':
+    pygame.init()
+    from time import time
+
+    screen = pygame.display.set_mode((1920, 1080), flags=pygame.FULLSCREEN | pygame.HWACCEL | pygame.HWSURFACE)
+    player1 = GameEntities.PinkSpaceship(numpy.array([1920 / 2. + 400, 1080 / 2 + 400]), 0,
+                                         {'THRUST': pygame.K_w, 'LEFT': pygame.K_a, 'RIGHT': pygame.K_d,
+                                          'SHOOT': pygame.K_SPACE})
+    player2 = GameEntities.BlueSpaceship(numpy.array([1920 / 2. - 400, 1080 / 2 - 400]), 0,
+                                         {'THRUST': pygame.K_UP, 'LEFT': pygame.K_LEFT, 'RIGHT': pygame.K_RIGHT,
+                                          'SHOOT': pygame.K_RCTRL})
+    bulletsPath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Bullet')
+    bulletImageFilePaths = bulletsPath.rglob('*[0-9].png')
+    bulletCache = {pth: pygame.image.load(str(pth)).convert_alpha() for pth in bulletImageFilePaths}
+    man = Manager(screen, bulletCache, player1, player2)
+    done = False
+    start = time()
+
+    while not done:
+
+        screen.fill((0, 0, 0))
+        man.completeCycle()
+        pygame.display.flip()
+        while time() - start < 1 / 60:
+            pass
+        start = time()
