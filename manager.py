@@ -9,6 +9,7 @@ from random import choices, randint
 
 from typing import Dict, List, Callable
 from pathlib import Path
+import sys
 
 
 class Manager:
@@ -45,9 +46,11 @@ class Manager:
 
                 if event.type == pygame.QUIT:
                     pygame.quit()
+                    sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         pygame.quit()
+                        sys.exit()
                     if event.key == ship.shootKey:
                         ship.shoot(self, self.bulletCache)
 
@@ -66,27 +69,43 @@ class Manager:
                 ship.noRotate()
 
     def updateAll(self):
+        popTheseBullets = []
+        popTheseSpaceships = []
         for index, entity in enumerate(self.spaceships + self.bullets):
             if isinstance(entity, GameEntities.Bullet):
                 if entity.offScreen:
-                    print(index)
-                    self.bullets.pop(index - len(self.spaceships))
+                    popTheseBullets.append(index - len(self.spaceships))
                 else:
-                    entity.Update()
+                    entity.Update(acc=entity.acc + self.currentGravity)
             else:
                 if entity.health <= 0:
-                    self.spaceships.pop(index)
+                    popTheseSpaceships.append(index)
                 else:
-                    entity.Update()
-        self.PowerUpManager.updatePowerUps()
+                    entity.Update(acc=entity.acc + self.currentGravity)
+
+        popTheseBullets.sort(reverse=True)
+        for bulletInd in popTheseBullets:
+            del self.bullets[bulletInd]
+        popTheseBullets.clear()
+
+        popTheseSpaceships.sort(reverse=True)
+        for shipInd in popTheseBullets:
+            del self.spaceships[shipInd]
+        popTheseSpaceships.clear()
+
+        # self.PowerUpManager.updatePowerUps()
 
     def doCollision(self):
+        popThese = []
         for index, bullet in enumerate(self.bullets):
             for ent in self.spaceships + self.PowerUpManager.spawnedPowerUps:
                 if bullet in ent:
                     ent.hit(bullet)
                     if bullet.killOnImpact:
-                        self.bullets.pop(index)
+                        popThese.append(index)
+
+        for ind in sorted(popThese, reverse=True):
+            del self.bullets[ind]
 
     def draw(self):
         for ent in self.PowerUpManager.spawnedPowerUps + self.spaceships + self.bullets:
@@ -128,9 +147,10 @@ class PowerUpManager:
 
 if __name__ == '__main__':
     pygame.init()
-    from time import time
+    clock = pygame.time.Clock()
 
-    screen = pygame.display.set_mode((1920, 1080), flags=pygame.FULLSCREEN | pygame.HWACCEL | pygame.HWSURFACE)
+    screen = pygame.display.set_mode((int(Cs.RESOLUTION[0]), int(Cs.RESOLUTION[1])),
+                                     flags=pygame.FULLSCREEN | pygame.HWACCEL | pygame.HWSURFACE | pygame.DOUBLEBUF)
     player1 = GameEntities.PinkSpaceship(numpy.array([1920 / 2. + 400, 1080 / 2 + 400]), 0,
                                          {'THRUST': pygame.K_w, 'LEFT': pygame.K_a, 'RIGHT': pygame.K_d,
                                           'SHOOT': pygame.K_SPACE})
@@ -142,13 +162,12 @@ if __name__ == '__main__':
     bulletCache = {pth: pygame.image.load(str(pth)).convert_alpha() for pth in bulletImageFilePaths}
     man = Manager(screen, bulletCache, player1, player2)
     done = False
-    start = time()
-
+    print(player1.spriteGroup.currentRect.h)
     while not done:
 
         screen.fill((0, 0, 0))
         man.completeCycle()
+        print(player1.pos)
+
         pygame.display.flip()
-        while time() - start < 1 / 60:
-            pass
-        start = time()
+        clock.tick(Cs.FPS)

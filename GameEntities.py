@@ -49,7 +49,7 @@ class Bullet(Entities.Entity):
         if self.offScreen:
             return
         super().Update(acc, angularAcc)
-        if not(Cs.GameStage[0][0] < self.pos[0] < Cs.GameStage[0][1] and Cs.GameStage[1][0] < self.pos[1] < Cs.GameStage[1][1]):
+        if not(0 < self.pos[0] < Cs.RESOLUTION[0] and 0 < self.pos[1] < Cs.RESOLUTION[1]):
             self.offScreen = True
 
 
