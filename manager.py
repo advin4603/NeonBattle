@@ -13,8 +13,31 @@ import sys
 from math import floor
 
 
+def healthBar(model: str, health: float, healthBarCache: Dict):
+    if model == 'Pink':
+        imgs = healthBarCache[model].allImages
+        bar, outline = imgs
+        outDim = outline.get_rect()
+        outDim.center = outDim.w / 2 + Cs.healthBarLeftDistance, outDim.h / 2 + Cs.healthBarTopDistance
+        barDim = bar.get_rect()
+        bar = pygame.transform.smoothscale(bar, (floor(barDim.w * health), barDim.h))
+        barDim.center = outDim.center
+        return (outline, outDim), (bar, barDim)
+    elif model == 'Blue':
+        imgs = healthBarCache[model].allImages
+        bar, outline = imgs
+        outDim = outline.get_rect()
+        outDim.center = Cs.RESOLUTION[0] - (outDim.w / 2 + Cs.healthBarLeftDistance), \
+                        Cs.RESOLUTION[1] - (outDim.h / 2 + Cs.healthBarTopDistance)
+        barDim = bar.get_rect()
+        bar = pygame.transform.smoothscale(bar, (floor(barDim.w * health), barDim.h))
+        barDim.center = outDim.center
+        return (outline, outDim), (bar, barDim)
+
+
 class Manager:
-    def __init__(self, display: pygame.Surface, bulletCache: Dict[Path, pygame.Surface], *args: GameEntities.Spaceship,
+    def __init__(self, display: pygame.Surface, bulletCache: Dict[Path, pygame.Surface], healthBarCache,
+                 *args: GameEntities.Spaceship,
                  beforeInput: List[Callable] = None,
                  beforeUpdate: List[Callable] = None,
                  beforeCollision: List[Callable] = None,
@@ -34,6 +57,7 @@ class Manager:
         self.afterDraw = afterDraw if afterDraw is not None else []
         self.schedule: List[Callable] = self.beforeInput + [self.InputCheck] + self.beforeUpdate + [
             self.updateAll] + self.beforeCollision + [self.doCollision] + self.beforeDraw + [self.draw] + self.afterDraw
+        self.healthBarCache = healthBarCache
 
     def addBullet(self, bul: GameEntities.Bullet):
         self.bullets.append(bul)
@@ -92,8 +116,14 @@ class Manager:
                 entity.Update(acc=entity.acc + self.currentGravity)
 
         popTheseBullets.sort(reverse=True)
+        popTheseBullets = list(set(popTheseBullets))
         for bulletInd in popTheseBullets:
-            del self.bullets[bulletInd]
+            if bulletInd < len(self.bullets):
+                del self.bullets[bulletInd]
+            else:
+                print(self.bullets)
+                print(bulletInd)
+                raise Exception
         popTheseBullets.clear()
 
         # self.PowerUpManager.updatePowerUps()
@@ -115,15 +145,21 @@ class Manager:
                     if bullet.killOnImpact:
                         popTheseBullets.append(index)
 
-        for ind in sorted(popTheseBullets, reverse=True):
-            del self.bullets[ind]
+        for ind in sorted(list(set(popTheseBullets)), reverse=True):
+            if ind < len(self.bullets):
+                del self.bullets[ind]
 
-        for ind in sorted(popTheseSpaceships, reverse=True):
-            del self.spaceships[ind]
+        for ind in sorted(list(set(popTheseSpaceships)), reverse=True):
+            if ind < len(self.spaceships):
+                del self.spaceships[ind]
 
     def draw(self):
         for ent in self.PowerUpManager.spawnedPowerUps + self.spaceships + self.bullets:
             ent.drawEntity(self.display)
+            if isinstance(ent, GameEntities.Spaceship):
+                outline, mainBar = healthBar(ent.model, ent.health, self.healthBarCache)
+                self.display.blit(*outline)
+                self.display.blit(*mainBar)
 
     def completeCycle(self):
         for func in self.schedule:
@@ -159,61 +195,37 @@ class PowerUpManager:
             self.spawnInterval -= 1
 
 
-def healthBar(model: str, health: float, healthBarCache: Dict):
-    if model == 'Pink':
-        imgs = healthBarCache[model].allImages
-        bar, outline = imgs
-        outDim = outline.get_rect()
-        outDim.center = outDim.w / 2 + Cs.healthBarLeftDistance, outDim.h / 2 + Cs.healthBarTopDistance
-        barDim = bar.get_rect()
-        bar = pygame.transform.smoothscale(bar, (barDim.w * health, barDim.h))
-        barDim.center = outDim.center
-        return (outline, outDim), (bar, barDim)
-    elif model == 'Blue':
-        imgs = healthBarCache[model].allImages
-        bar, outline = imgs
-        outDim = outline.get_rect()
-        outDim.center = Cs.RESOLUTION[0] - (outDim.w / 2 + Cs.healthBarLeftDistance), \
-                        Cs.RESOLUTION[1] - (outDim.h / 2 + Cs.healthBarTopDistance)
-        barDim = bar.get_rect()
-        bar = pygame.transform.smoothscale(bar, (barDim.w * health, barDim.h))
-        barDim.center = outDim.center
-        return (outline, outDim), (bar, barDim)
-
-
-healthBarCache: Dict[str, imageGroup.ImageGroup] = {
-    'Pink': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Pink/Solid'),
-                                  lambda n: pygame.image.load(str(n)).convert_alpha()),
-    'Blue': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Blue/Solid'),
-                                  lambda n: pygame.image.load(str(n)).convert_alpha())}
-
-
-def scaler(inSurface: pygame.Surface):
-    dim = inSurface.get_rect()
-    return pygame.transform.smoothscale(inSurface, (
-        floor(dim.w * Cs.healthBarScaleConst[0]), floor(dim.h * Cs.healthBarScaleConst[1])))
-
-
-for model in healthBarCache:
-    healthBarCache[model].transformAll(scaler)
-
 if __name__ == '__main__':
     pygame.init()
     clock = pygame.time.Clock()
 
     screen = pygame.display.set_mode((int(Cs.RESOLUTION[0]), int(Cs.RESOLUTION[1])),
                                      flags=pygame.FULLSCREEN | pygame.HWACCEL | pygame.HWSURFACE | pygame.DOUBLEBUF)
-    player1 = GameEntities.PinkSpaceship(numpy.array([1920 / 2. + 400, 1080 / 2 + 400]), 0,
+    player1 = GameEntities.PinkSpaceship(numpy.array([Cs.RESOLUTION[0] / 2. - 400, Cs.RESOLUTION[1] / 2 - 400]), 0,
                                          {'THRUST': pygame.K_w, 'LEFT': pygame.K_a, 'RIGHT': pygame.K_d,
                                           'SHOOT': pygame.K_SPACE})
-    player2 = GameEntities.BlueSpaceship(numpy.array([1920 / 2. - 400, 1080 / 2 - 400]), 0,
+    player2 = GameEntities.BlueSpaceship(numpy.array([Cs.RESOLUTION[0] / 2. + 400, Cs.RESOLUTION[1] / 2 + 400]), 0,
                                          {'THRUST': pygame.K_UP, 'LEFT': pygame.K_LEFT, 'RIGHT': pygame.K_RIGHT,
                                           'SHOOT': pygame.K_RCTRL})
     bulletsPath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Bullet')
     bulletImageFilePaths = bulletsPath.rglob('*[0-9].png')
     bulletCache = {pth: pygame.image.load(str(pth)).convert_alpha() for pth in bulletImageFilePaths}
+    healthBarCache: Dict[str, imageGroup.ImageGroup] = {
+        'Pink': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Pink/Solid'),
+                                      lambda n: pygame.image.load(str(n)).convert_alpha()),
+        'Blue': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Blue/Solid'),
+                                      lambda n: pygame.image.load(str(n)).convert_alpha())}
 
-    man = Manager(screen, bulletCache, player1, player2)
+
+    def scaler(inSurface: pygame.Surface):
+        dim = inSurface.get_rect()
+        return pygame.transform.smoothscale(inSurface, (
+            floor(dim.w * Cs.healthBarScaleConst[0]), floor(dim.h * Cs.healthBarScaleConst[1])))
+
+
+    for model in healthBarCache:
+        healthBarCache[model].transformAll(scaler)
+    man = Manager(screen, bulletCache, healthBarCache, player1, player2)
     done = False
     while not done:
         screen.fill((0, 0, 0))
