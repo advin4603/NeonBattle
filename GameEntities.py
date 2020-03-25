@@ -49,7 +49,7 @@ class Bullet(Entities.Entity):
         if self.offScreen:
             return
         super().Update(acc, angularAcc)
-        if not(0 < self.pos[0] < Cs.RESOLUTION[0] and 0 < self.pos[1] < Cs.RESOLUTION[1]):
+        if not (0 < self.pos[0] < Cs.RESOLUTION[0] and 0 < self.pos[1] < Cs.RESOLUTION[1]):
             self.offScreen = True
 
 
@@ -112,11 +112,11 @@ class Spaceship(Entities.Entity):
         """
         newBullet = Bullet(self.pos + self.headDirectionVector * self.spriteGroup.currentRect.h / 2,
                            self.angularDisplacement, self.model, self,
-                           self.bulletSpeed, self.piercingBullets, bulletCache)
+                           self.bulletSpeed, not self.piercingBullets, bulletCache)
         manager.addBullet(newBullet)
 
     def hit(self, bullet: Bullet):
-        self.health -= bullet.damage * self.damageDamp
+        self.health = round(self.health - bullet.damage * self.damageDamp, 1)
 
 
 class PinkSpaceship(Spaceship):

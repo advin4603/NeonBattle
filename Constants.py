@@ -9,7 +9,7 @@ spacehipUpdateInterval: int = 10  # Time is in number of Frames
 spaceshipScaleConst = bulletScaleConst = healthBarScaleConst = RESOLUTION[0] / 3840, RESOLUTION[1] / 2160
 bulletUpdateInterval: int = 10  # Time is in number of Frames
 DEFAULTDAMAGE: float = 0.1
-DEFAULTDAMAGEDAMP: float = 0.
+DEFAULTDAMAGEDAMP: float = 1.
 SPEEDLIMIT: float = 520 / FPS
 THRUST: float = -20 / FPS
 DAMP: float = -THRUST / 20
@@ -21,6 +21,8 @@ DEFAULTBULLETSPEED: float = -1.5 * SPEEDLIMIT
 PowerUpSpawnInterval: int = FPS * 60
 PowerUpDespawnInterval: int = FPS * 20
 PowerUpSpawnRange: Tuple[int, int] = 2, 5
+healthBarLeftDistance = 100
+healthBarTopDistance = 100
 
 GRAVITYON = False
 if GRAVITYON:

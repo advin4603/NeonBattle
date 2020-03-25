@@ -10,6 +10,7 @@ from random import choices, randint
 from typing import Dict, List, Callable
 from pathlib import Path
 import sys
+from math import floor
 
 
 class Manager:
@@ -68,9 +69,19 @@ class Manager:
             else:
                 ship.noRotate()
 
+        if not self.spaceships:
+            for event in events:
+
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
+
     def updateAll(self):
         popTheseBullets = []
-        popTheseSpaceships = []
         for index, entity in enumerate(self.spaceships + self.bullets):
             if isinstance(entity, GameEntities.Bullet):
                 if entity.offScreen:
@@ -78,34 +89,37 @@ class Manager:
                 else:
                     entity.Update(acc=entity.acc + self.currentGravity)
             else:
-                if entity.health <= 0:
-                    popTheseSpaceships.append(index)
-                else:
-                    entity.Update(acc=entity.acc + self.currentGravity)
+                entity.Update(acc=entity.acc + self.currentGravity)
 
         popTheseBullets.sort(reverse=True)
         for bulletInd in popTheseBullets:
             del self.bullets[bulletInd]
         popTheseBullets.clear()
 
-        popTheseSpaceships.sort(reverse=True)
-        for shipInd in popTheseBullets:
-            del self.spaceships[shipInd]
-        popTheseSpaceships.clear()
-
         # self.PowerUpManager.updatePowerUps()
 
     def doCollision(self):
-        popThese = []
-        for index, bullet in enumerate(self.bullets):
-            for ent in self.spaceships + self.PowerUpManager.spawnedPowerUps:
-                if bullet in ent:
-                    ent.hit(bullet)
-                    if bullet.killOnImpact:
-                        popThese.append(index)
 
-        for ind in sorted(popThese, reverse=True):
+        popTheseBullets = []
+        popTheseSpaceships = []
+        for index, bullet in enumerate(self.bullets):
+            for shipIndex, ent in enumerate(self.spaceships + self.PowerUpManager.spawnedPowerUps):
+
+                if bullet in ent:
+
+                    ent.hit(bullet)
+                    if isinstance(ent, GameEntities.Spaceship):
+                        if ent.health <= 0:
+                            popTheseSpaceships.append(shipIndex)
+
+                    if bullet.killOnImpact:
+                        popTheseBullets.append(index)
+
+        for ind in sorted(popTheseBullets, reverse=True):
             del self.bullets[ind]
+
+        for ind in sorted(popTheseSpaceships, reverse=True):
+            del self.spaceships[ind]
 
     def draw(self):
         for ent in self.PowerUpManager.spawnedPowerUps + self.spaceships + self.bullets:
@@ -145,6 +159,44 @@ class PowerUpManager:
             self.spawnInterval -= 1
 
 
+def healthBar(model: str, health: float, healthBarCache: Dict):
+    if model == 'Pink':
+        imgs = healthBarCache[model].allImages
+        bar, outline = imgs
+        outDim = outline.get_rect()
+        outDim.center = outDim.w / 2 + Cs.healthBarLeftDistance, outDim.h / 2 + Cs.healthBarTopDistance
+        barDim = bar.get_rect()
+        bar = pygame.transform.smoothscale(bar, (barDim.w * health, barDim.h))
+        barDim.center = outDim.center
+        return (outline, outDim), (bar, barDim)
+    elif model == 'Blue':
+        imgs = healthBarCache[model].allImages
+        bar, outline = imgs
+        outDim = outline.get_rect()
+        outDim.center = Cs.RESOLUTION[0] - (outDim.w / 2 + Cs.healthBarLeftDistance), \
+                        Cs.RESOLUTION[1] - (outDim.h / 2 + Cs.healthBarTopDistance)
+        barDim = bar.get_rect()
+        bar = pygame.transform.smoothscale(bar, (barDim.w * health, barDim.h))
+        barDim.center = outDim.center
+        return (outline, outDim), (bar, barDim)
+
+
+healthBarCache: Dict[str, imageGroup.ImageGroup] = {
+    'Pink': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Pink/Solid'),
+                                  lambda n: pygame.image.load(str(n)).convert_alpha()),
+    'Blue': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Blue/Solid'),
+                                  lambda n: pygame.image.load(str(n)).convert_alpha())}
+
+
+def scaler(inSurface: pygame.Surface):
+    dim = inSurface.get_rect()
+    return pygame.transform.smoothscale(inSurface, (
+        floor(dim.w * Cs.healthBarScaleConst[0]), floor(dim.h * Cs.healthBarScaleConst[1])))
+
+
+for model in healthBarCache:
+    healthBarCache[model].transformAll(scaler)
+
 if __name__ == '__main__':
     pygame.init()
     clock = pygame.time.Clock()
@@ -160,14 +212,11 @@ if __name__ == '__main__':
     bulletsPath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Bullet')
     bulletImageFilePaths = bulletsPath.rglob('*[0-9].png')
     bulletCache = {pth: pygame.image.load(str(pth)).convert_alpha() for pth in bulletImageFilePaths}
+
     man = Manager(screen, bulletCache, player1, player2)
     done = False
-    print(player1.spriteGroup.currentRect.h)
     while not done:
-
         screen.fill((0, 0, 0))
         man.completeCycle()
-        print(player1.pos)
-
         pygame.display.flip()
         clock.tick(Cs.FPS)
