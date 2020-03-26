@@ -120,10 +120,6 @@ class Manager:
         for bulletInd in popTheseBullets:
             if bulletInd < len(self.bullets):
                 del self.bullets[bulletInd]
-            else:
-                print(self.bullets)
-                print(bulletInd)
-                raise Exception
         popTheseBullets.clear()
 
         # self.PowerUpManager.updatePowerUps()

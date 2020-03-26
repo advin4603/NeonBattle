@@ -2,7 +2,7 @@ from typing import Tuple, List
 import numpy
 from math import floor
 
-FPS: int = 100
+FPS: int = 60
 RESOLUTION: Tuple[float, float] = 1920.,1080.
 WINDOWED: bool = False
 spacehipUpdateInterval: int = 10  # Time is in number of Frames
@@ -36,7 +36,7 @@ elif RESOLUTION == (1920., 1080.):
     FRAME = ([240.0, 1680.0], [284.0, 796.0])
     GameStage = FRAME
 
-GRAVITYON = False
+GRAVITYON = True
 if GRAVITYON:
     DEFAULTGRAVITY: numpy.array = numpy.array([0., 12 / FPS])
     SPEEDLIMIT: None = None
