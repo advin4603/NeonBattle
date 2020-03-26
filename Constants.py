@@ -3,7 +3,7 @@ import numpy
 from math import floor
 
 FPS: int = 60
-RESOLUTION: Tuple[float, float] = 1920.,1080.
+RESOLUTION: Tuple[float, float] = 1280., 720.
 WINDOWED: bool = False
 spacehipUpdateInterval: int = 10  # Time is in number of Frames
 spaceshipScaleConst = bulletScaleConst = healthBarScaleConst = RESOLUTION[0] / 3840, RESOLUTION[1] / 2160
@@ -24,11 +24,8 @@ PowerUpSpawnRange: Tuple[int, int] = 2, 5
 if RESOLUTION == (1280., 720.):
     healthBarLeftDistance = 50
     healthBarTopDistance = 50
-    FRAME = (
-        [2 * spaceshipScaleConst[0] * 198 * (2 ** 0.5),
-         RESOLUTION[0] - 2 * (spaceshipScaleConst[0] * 198 * (2 ** 0.5))],
-        [spaceshipScaleConst[1] * 198 * (2 ** 0.5) + healthBarScaleConst[1] * (156 + 100),
-         RESOLUTION[1] - (spaceshipScaleConst[1] * 198 * (2 ** 0.5) + healthBarScaleConst[1] * (156 + 100))])
+    FRAME = ([65., 1215.], [160, 558])
+    BULLETSPAWNDIST:float = -110
     GameStage = FRAME
 elif RESOLUTION == (1920., 1080.):
     healthBarLeftDistance = 200
@@ -36,7 +33,7 @@ elif RESOLUTION == (1920., 1080.):
     FRAME = ([240.0, 1680.0], [284.0, 796.0])
     GameStage = FRAME
 
-GRAVITYON = True
+GRAVITYON = False
 if GRAVITYON:
     DEFAULTGRAVITY: numpy.array = numpy.array([0., 12 / FPS])
     SPEEDLIMIT: None = None
