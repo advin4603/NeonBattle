@@ -5,6 +5,7 @@ from math import floor
 FPS: int = 60
 RESOLUTION: Tuple[float, float] = 1280., 720.
 WINDOWED: bool = False
+BLOOM:bool = True
 spacehipUpdateInterval: int = 10  # Time is in number of Frames
 spaceshipScaleConst = bulletScaleConst = healthBarScaleConst = RESOLUTION[0] / 3840, RESOLUTION[1] / 2160
 bulletUpdateInterval: int = 10  # Time is in number of Frames

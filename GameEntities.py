@@ -24,6 +24,8 @@ class Bullet(Entities.Entity):
         self.parent = parent
         self.spritePath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Bullet') / Path(model) / Path(
             'Solid')
+        self.bloomSpritePath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Bullet') / Path(model) / Path(
+            'Bloom')
         self.bulletCache = bulletCache
 
         def imageLoader(inPath: Path):
@@ -33,6 +35,12 @@ class Bullet(Entities.Entity):
         self.Images = imageGroup.ImageGroup(imageFolderPath=self.spritePath,
                                             imageLoader=imageLoader)
         self.Sprite = Sprite.Sprite(self.Images, Cs.bulletScaleConst, Cs.bulletUpdateInterval, (pos[0], pos[1]))
+
+        self.bloomImages = imageGroup.ImageGroup(imageFolderPath=self.bloomSpritePath,
+                                                 imageLoader=imageLoader)
+        self.bloomSprite = Sprite.Sprite(self.bloomImages, Cs.bulletScaleConst, Cs.bulletUpdateInterval,
+                                         (pos[0], pos[1]))
+
         self.bulletHalfHeight = self.Sprite.currentRect.h / 2
         self.angularDisplacement = angle
 
@@ -49,8 +57,15 @@ class Bullet(Entities.Entity):
         if self.offScreen:
             return
         super().Update(acc, angularAcc)
+        if Cs.BLOOM:
+            self.bloomSprite.UpdateCurrent(self.angularDisplacement, self.pos)
         if not (0 < self.pos[0] < Cs.RESOLUTION[0] and 0 < self.pos[1] < Cs.RESOLUTION[1]):
             self.offScreen = True
+
+    def drawEntity(self, screen: pygame.Surface):
+        super().drawEntity(screen)
+        if Cs.BLOOM:
+            self.bloomSprite.draw(screen)
 
 
 class Spaceship(Entities.Entity):
@@ -68,6 +83,13 @@ class Spaceship(Entities.Entity):
                                             imageLoader=imageLoader)
 
         self.Sprite = Sprite.Sprite(self.Images, Cs.spaceshipScaleConst, Cs.spacehipUpdateInterval, (pos[0], pos[1]))
+        self.bloomImagePath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Spaceship') / Path(
+            model) / Path(
+            'Bloom')
+        self.bloomImages = imageGroup.ImageGroup(imageFolderPath=self.bloomImagePath,
+                                                 imageLoader=imageLoader)
+        self.bloomSprite = Sprite.Sprite(self.bloomImages, Cs.spaceshipScaleConst, Cs.spacehipUpdateInterval,
+                                         (pos[0], pos[1]))
         self.thrustOn = False
         self.health = 1
         self.damagePerBullet = Cs.DEFAULTDAMAGE
@@ -117,6 +139,16 @@ class Spaceship(Entities.Entity):
 
     def hit(self, bullet: Bullet):
         self.health = round(self.health - bullet.damage * self.damageDamp, 1)
+
+    def Update(self, acc: numpy.array = None, angularAcc: float = None):
+        super().Update(acc, angularAcc)
+        if Cs.BLOOM:
+            self.bloomSprite.UpdateCurrent(self.angularDisplacement, self.pos)
+
+    def drawEntity(self, screen: pygame.Surface):
+        super().drawEntity(screen)
+        if Cs.BLOOM:
+            self.bloomSprite.draw(screen)
 
 
 class PinkSpaceship(Spaceship):

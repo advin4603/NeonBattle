@@ -13,7 +13,7 @@ import sys
 from math import floor
 
 
-def healthBar(model: str, health: float, healthBarCache: Dict):
+def healthBar(model: str, health: float, healthBarCache: Dict, bloomHealthBarCache: Dict = None):
     if model == 'Pink':
         imgs = healthBarCache[model].allImages
         bar, outline = imgs
@@ -22,6 +22,13 @@ def healthBar(model: str, health: float, healthBarCache: Dict):
         barDim = bar.get_rect()
         bar = pygame.transform.smoothscale(bar, (floor(barDim.w * health), barDim.h))
         barDim.center = outDim.center
+        if Cs.BLOOM:
+            if bloomHealthBarCache is None:
+                raise Exception('Bloom health Bar not rendered')
+            _, bloomOutline = bloomHealthBarCache[model].allImages
+            bloomOutDim = bloomOutline.get_rect()
+            bloomOutDim.center = outDim.center
+            return ((outline, outDim), (bloomOutline, bloomOutDim)), (bar, barDim)
         return (outline, outDim), (bar, barDim)
     elif model == 'Blue':
         imgs = healthBarCache[model].allImages
@@ -32,12 +39,20 @@ def healthBar(model: str, health: float, healthBarCache: Dict):
         barDim = bar.get_rect()
         bar = pygame.transform.smoothscale(bar, (floor(barDim.w * health), barDim.h))
         barDim.center = outDim.center
+        if Cs.BLOOM:
+            if bloomHealthBarCache is None:
+                raise Exception('Bloom health Bar not rendered')
+            _, bloomOutline = bloomHealthBarCache[model].allImages
+            bloomOutDim = bloomOutline.get_rect()
+            bloomOutDim.center = outDim.center
+            return ((outline, outDim), (bloomOutline, bloomOutDim)), (bar, barDim)
         return (outline, outDim), (bar, barDim)
 
 
 class Manager:
     def __init__(self, display: pygame.Surface, bulletCache: Dict[Path, pygame.Surface], healthBarCache,
                  *args: GameEntities.Spaceship,
+                 bloomHealthCache=None,
                  beforeInput: List[Callable] = None,
                  beforeUpdate: List[Callable] = None,
                  beforeCollision: List[Callable] = None,
@@ -58,6 +73,7 @@ class Manager:
         self.schedule: List[Callable] = self.beforeInput + [self.InputCheck] + self.beforeUpdate + [
             self.updateAll] + self.beforeCollision + [self.doCollision] + self.beforeDraw + [self.draw] + self.afterDraw
         self.healthBarCache = healthBarCache
+        self.bloomHealthCache = bloomHealthCache
 
     def addBullet(self, bul: GameEntities.Bullet):
         self.bullets.append(bul)
@@ -153,9 +169,17 @@ class Manager:
         for ent in self.PowerUpManager.spawnedPowerUps + self.spaceships + self.bullets:
             ent.drawEntity(self.display)
             if isinstance(ent, GameEntities.Spaceship):
-                outline, mainBar = healthBar(ent.model, ent.health, self.healthBarCache)
-                self.display.blit(*outline)
-                self.display.blit(*mainBar)
+                if Cs.BLOOM:
+                    (outline, bloomOutline), mainBar = healthBar(ent.model, ent.health,
+                                                                 self.healthBarCache,
+                                                                 self.bloomHealthCache)
+                    self.display.blit(*outline)
+                    self.display.blit(*bloomOutline)
+                    self.display.blit(*mainBar)
+                else:
+                    outline, mainBar = healthBar(ent.model, ent.health, self.healthBarCache)
+                    self.display.blit(*outline)
+                    self.display.blit(*mainBar)
 
     def completeCycle(self):
         for func in self.schedule:
@@ -192,39 +216,55 @@ class PowerUpManager:
 
 
 if __name__ == '__main__':
-    pygame.init()
-    clock = pygame.time.Clock()
+    try:
+        pygame.init()
+        clock = pygame.time.Clock()
 
-    screen = pygame.display.set_mode((int(Cs.RESOLUTION[0]), int(Cs.RESOLUTION[1])),
-                                     flags=pygame.FULLSCREEN | pygame.HWACCEL | pygame.HWSURFACE | pygame.DOUBLEBUF)
-    player1 = GameEntities.PinkSpaceship(numpy.array([Cs.RESOLUTION[0] / 2. - 400, Cs.RESOLUTION[1] / 2 - 400]), 0,
-                                         {'THRUST': pygame.K_w, 'LEFT': pygame.K_a, 'RIGHT': pygame.K_d,
-                                          'SHOOT': pygame.K_SPACE})
-    player2 = GameEntities.BlueSpaceship(numpy.array([Cs.RESOLUTION[0] / 2. + 400, Cs.RESOLUTION[1] / 2 + 400]), 0,
-                                         {'THRUST': pygame.K_UP, 'LEFT': pygame.K_LEFT, 'RIGHT': pygame.K_RIGHT,
-                                          'SHOOT': pygame.K_RCTRL})
-    bulletsPath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Bullet')
-    bulletImageFilePaths = bulletsPath.rglob('*[0-9].png')
-    bulletCache = {pth: pygame.image.load(str(pth)).convert_alpha() for pth in bulletImageFilePaths}
-    healthBarCache: Dict[str, imageGroup.ImageGroup] = {
-        'Pink': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Pink/Solid'),
-                                      lambda n: pygame.image.load(str(n)).convert_alpha()),
-        'Blue': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Blue/Solid'),
-                                      lambda n: pygame.image.load(str(n)).convert_alpha())}
-
-
-    def scaler(inSurface: pygame.Surface):
-        dim = inSurface.get_rect()
-        return pygame.transform.smoothscale(inSurface, (
-            floor(dim.w * Cs.healthBarScaleConst[0]), floor(dim.h * Cs.healthBarScaleConst[1])))
+        screen = pygame.display.set_mode((int(Cs.RESOLUTION[0]), int(Cs.RESOLUTION[1])),
+                                         flags=pygame.FULLSCREEN | pygame.HWACCEL | pygame.HWSURFACE | pygame.DOUBLEBUF)
+        player1 = GameEntities.PinkSpaceship(numpy.array([Cs.RESOLUTION[0] / 2. - 400, Cs.RESOLUTION[1] / 2 - 400]), 0,
+                                             {'THRUST': pygame.K_w, 'LEFT': pygame.K_a, 'RIGHT': pygame.K_d,
+                                              'SHOOT': pygame.K_SPACE})
+        player2 = GameEntities.BlueSpaceship(numpy.array([Cs.RESOLUTION[0] / 2. + 400, Cs.RESOLUTION[1] / 2 + 400]), 0,
+                                             {'THRUST': pygame.K_UP, 'LEFT': pygame.K_LEFT, 'RIGHT': pygame.K_RIGHT,
+                                              'SHOOT': pygame.K_RCTRL})
+        bulletsPath = Path('Assets') / Path('Images') / Path('Sprites') / Path('Bullet')
+        bulletImageFilePaths = bulletsPath.rglob('*[0-9].png')
+        bulletCache = {pth: pygame.image.load(str(pth)).convert_alpha() for pth in bulletImageFilePaths}
+        healthBarCache: Dict[str, imageGroup.ImageGroup] = {
+            'Pink': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Pink/Solid'),
+                                          lambda n: pygame.image.load(str(n)).convert_alpha()),
+            'Blue': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Blue/Solid'),
+                                          lambda n: pygame.image.load(str(n)).convert_alpha())}
 
 
-    for model in healthBarCache:
-        healthBarCache[model].transformAll(scaler)
-    man = Manager(screen, bulletCache, healthBarCache, player1, player2)
-    done = False
-    while not done:
-        screen.fill((0, 0, 0))
-        man.completeCycle()
-        pygame.display.flip()
-        clock.tick(Cs.FPS)
+        def scaler(inSurface: pygame.Surface):
+            dim = inSurface.get_rect()
+            return pygame.transform.smoothscale(inSurface, (
+                floor(dim.w * Cs.healthBarScaleConst[0]), floor(dim.h * Cs.healthBarScaleConst[1])))
+
+
+        for model in healthBarCache:
+            healthBarCache[model].transformAll(scaler)
+        if Cs.BLOOM:
+            bloomHealthBarCache: Dict[str, imageGroup.ImageGroup] = {
+                'Pink': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Pink/Bloom'),
+                                              lambda n: pygame.image.load(str(n)).convert_alpha()),
+                'Blue': imageGroup.ImageGroup(Path('Assets/Images/Sprites/HealthBar/Blue/Bloom'),
+                                              lambda n: pygame.image.load(str(n)).convert_alpha())}
+            for model in bloomHealthBarCache:
+                bloomHealthBarCache[model].transformAll(scaler)
+
+            man = Manager(screen, bulletCache, healthBarCache, player1, player2, bloomHealthCache=bloomHealthBarCache)
+        else:
+            man = Manager(screen, bulletCache, healthBarCache, player1, player2)
+        done = False
+        while not done:
+            screen.fill((0, 0, 0))
+            man.completeCycle()
+            pygame.display.flip()
+            clock.tick(Cs.FPS)
+    except Exception as exc:
+        print(exc)
+        pygame.quit()
+        input('Press any button to exit...')
