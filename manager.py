@@ -62,6 +62,7 @@ class Manager:
         self.spaceships = list(args)
         self.bullets = []
         self.display = display
+        print('Init powerup')
         self.PowerUpManager = PowerUpManager()
         self.currentGravity = Cs.DEFAULTGRAVITY
         self.bulletCache = bulletCache
@@ -74,6 +75,11 @@ class Manager:
             self.updateAll] + self.beforeCollision + [self.doCollision] + self.beforeDraw + [self.draw] + self.afterDraw
         self.healthBarCache = healthBarCache
         self.bloomHealthCache = bloomHealthCache
+
+        self.scanlines = pygame.Surface((int(Cs.RESOLUTION[0]), int(Cs.RESOLUTION[1]))).convert_alpha()
+        self.scanlines.fill((0, 0, 0, 0))
+        for j in range(0, int(Cs.RESOLUTION[1]), 4):
+            self.scanlines.fill((0, 0, 0, 125), (0, j, Cs.RESOLUTION[0], 2))
 
     def addBullet(self, bul: GameEntities.Bullet):
         self.bullets.append(bul)
@@ -137,8 +143,7 @@ class Manager:
             if bulletInd < len(self.bullets):
                 del self.bullets[bulletInd]
         popTheseBullets.clear()
-
-        # self.PowerUpManager.updatePowerUps()
+        self.PowerUpManager.updatePowerUps()
 
     def doCollision(self):
 
@@ -180,6 +185,7 @@ class Manager:
                     outline, mainBar = healthBar(ent.model, ent.health, self.healthBarCache)
                     self.display.blit(*outline)
                     self.display.blit(*mainBar)
+        self.display.blit(self.scanlines, (0, 0))
 
     def completeCycle(self):
         for func in self.schedule:
@@ -188,15 +194,24 @@ class Manager:
 
 class PowerUpManager:
     def __init__(self):
+        PowerPath = Path('Assets') / Path('Images') / Path('Sprites') / Path('PowerUps')
+        PowerImageFilePaths = PowerPath.rglob('*[0-9].png')
+        self.PowerCache = {pth: pygame.image.load(str(pth)).convert_alpha() for pth in PowerImageFilePaths}
         self.Powers = list(PowerUp.__subclasses__())
+        print(self.Powers)
 
         def ProbGetter(inPower: PowerUp) -> float:
+            print(inPower.probability)
             return inPower.probability
 
         self.Probabilities = map(ProbGetter, self.Powers)
         self.spawnInterval = Cs.PowerUpSpawnInterval
         self.despawnInterval = Cs.PowerUpDespawnInterval
         self.spawnedPowerUps = []
+
+    def caller(self, n):
+        print('INIT',n)
+        return n(self.PowerCache)
 
     def updatePowerUps(self):
         if self.despawnInterval == 1:
@@ -210,7 +225,9 @@ class PowerUpManager:
         if self.spawnInterval == 1:
             self.spawnedPowerUps.clear()
             self.spawnInterval = Cs.PowerUpSpawnInterval
-            # self.spawnedPowerUps.extend(choices(self.Powers, self.Probabilities, k=randint(*Cs.PowerUpSpawnRange)))
+            newPowers = choices(self.Powers, self.Probabilities, k=randint(*Cs.PowerUpSpawnRange))
+            newPowers = map(self.caller, newPowers)
+            # self.spawnedPowerUps.extend(newPowers)
         else:
             self.spawnInterval -= 1
 

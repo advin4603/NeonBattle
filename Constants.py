@@ -5,11 +5,11 @@ from math import floor
 FPS: int = 60
 RESOLUTION: Tuple[float, float] = 1280., 720.
 WINDOWED: bool = False
-BLOOM:bool = True
+BLOOM:bool = False
 spacehipUpdateInterval: int = 10  # Time is in number of Frames
 spaceshipScaleConst = bulletScaleConst = healthBarScaleConst = RESOLUTION[0] / 3840, RESOLUTION[1] / 2160
 bulletUpdateInterval: int = 10  # Time is in number of Frames
-DEFAULTDAMAGE: float = 0.1
+DEFAULTDAMAGE: float = 0.5
 DEFAULTDAMAGEDAMP: float = 1.
 SPEEDLIMIT: float = 520 / FPS
 THRUST: float = -20 / FPS
@@ -19,7 +19,7 @@ ROTATETHRUST: float = 12 / FPS
 AngularDAMP: float = 0.08
 BULLETSPAWNDIST: float = -150
 DEFAULTBULLETSPEED: float = -2 * SPEEDLIMIT
-PowerUpSpawnInterval: int = FPS * 60
+PowerUpSpawnInterval: int = FPS * 1
 PowerUpDespawnInterval: int = FPS * 20
 PowerUpSpawnRange: Tuple[int, int] = 2, 5
 if RESOLUTION == (1280., 720.):
@@ -34,7 +34,7 @@ elif RESOLUTION == (1920., 1080.):
     FRAME = ([240.0, 1680.0], [284.0, 796.0])
     GameStage = FRAME
 
-GRAVITYON = False
+GRAVITYON = True
 if GRAVITYON:
     DEFAULTGRAVITY: numpy.array = numpy.array([0., 12 / FPS])
     SPEEDLIMIT: None = None
