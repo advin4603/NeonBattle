@@ -1,16 +1,41 @@
-from typing import Tuple, List
+from typing import Tuple, List, Union, Dict
 import numpy
 from math import floor
+from Reader import reader
 
+settings: Union[Dict[str, bool], Dict[str, None]] = reader('Settings.txt')
 FPS: int = 60
 RESOLUTION: Tuple[float, float] = 1280., 720.
-WINDOWED: bool = False
-BLOOM:bool = False
+
+CRT: bool
+if 'CRT EFFECT' in settings and settings['CRT EFFECT'] is not None:
+    CRT = settings['CRT EFFECT']
+else:
+    CRT = False
+
+SCANLINES: bool
+if 'SCANLINES' in settings and settings['SCANLINES'] is not None:
+    SCANLINES = settings['SCANLINES']
+else:
+    SCANLINES = CRT
+
+WINDOWED: bool
+if 'FULLSCREEN' in settings and settings['FULLSCREEN'] is not None:
+    WINDOWED = not settings['FULLSCREEN']
+else:
+    WINDOWED = False
+
+BLOOM: bool
+if 'BLOOM' in settings and settings['FULLSCREEN'] is not None:
+    BLOOM = settings['BLOOM']
+else:
+    BLOOM = False
+
 spacehipUpdateInterval: int = 10  # Time is in number of Frames
 spaceshipScaleConst = bulletScaleConst = healthBarScaleConst = RESOLUTION[0] / 3840, RESOLUTION[1] / 2160
 bulletUpdateInterval: int = 10  # Time is in number of Frames
-DEFAULTMAXHEALTH = 1000
-DEFAULTDAMAGE: float = 10
+DEFAULTMAXHEALTH = 100
+DEFAULTDAMAGE: float = 1
 DEFAULTDAMAGEDAMP: float = 1.
 SPEEDLIMIT: float = 520 / FPS
 THRUST: float = -20 / FPS
@@ -27,7 +52,7 @@ if RESOLUTION == (1280., 720.):
     healthBarLeftDistance = 50
     healthBarTopDistance = 50
     FRAME = ([65., 1215.], [160, 558])
-    BULLETSPAWNDIST:float = -110
+    BULLETSPAWNDIST: float = -110
     GameStage = FRAME
 elif RESOLUTION == (1920., 1080.):
     healthBarLeftDistance = 200
@@ -35,7 +60,12 @@ elif RESOLUTION == (1920., 1080.):
     FRAME = ([240.0, 1680.0], [284.0, 796.0])
     GameStage = FRAME
 
-GRAVITYON = False
+GRAVITYON: bool
+if 'GRAVITY' in settings and settings['GRAVITY'] is not None:
+    GRAVITYON = settings['GRAVITY']
+else:
+    GRAVITYON = False
+
 if GRAVITYON:
     DEFAULTGRAVITY: numpy.array = numpy.array([0., 12 / FPS])
     SPEEDLIMIT: None = None

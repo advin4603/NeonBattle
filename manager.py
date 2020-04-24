@@ -185,7 +185,8 @@ class Manager:
                     outline, mainBar = healthBar(ent.model, ent.health, self.healthBarCache, maxHealth=ent.maxHealth)
                     self.display.blit(*outline)
                     self.display.blit(*mainBar)
-        self.display.blit(self.scanlines, (0, 0))
+        if Cs.SCANLINES:
+            self.display.blit(self.scanlines, (0, 0))
 
     def completeCycle(self):
         for func in self.schedule:
