@@ -13,14 +13,15 @@ import sys
 from math import floor
 
 
-def healthBar(model: str, health: float, healthBarCache: Dict, bloomHealthBarCache: Dict = None):
+def healthBar(model: str, health: float, healthBarCache: Dict, bloomHealthBarCache: Dict = None,
+              maxHealth=Cs.DEFAULTMAXHEALTH):
     if model == 'Pink':
         imgs = healthBarCache[model].allImages
         bar, outline = imgs
         outDim = outline.get_rect()
         outDim.center = outDim.w / 2 + Cs.healthBarLeftDistance, outDim.h / 2 + Cs.healthBarTopDistance
         barDim = bar.get_rect()
-        bar = pygame.transform.smoothscale(bar, (floor(barDim.w * health), barDim.h))
+        bar = pygame.transform.smoothscale(bar, (floor((barDim.w * health) / maxHealth), barDim.h))
         barDim.center = outDim.center
         if Cs.BLOOM:
             if bloomHealthBarCache is None:
@@ -37,7 +38,7 @@ def healthBar(model: str, health: float, healthBarCache: Dict, bloomHealthBarCac
         outDim.center = Cs.RESOLUTION[0] - (outDim.w / 2 + Cs.healthBarLeftDistance), \
                         Cs.RESOLUTION[1] - (outDim.h / 2 + Cs.healthBarTopDistance)
         barDim = bar.get_rect()
-        bar = pygame.transform.smoothscale(bar, (floor(barDim.w * health), barDim.h))
+        bar = pygame.transform.smoothscale(bar, (floor(barDim.w * health/maxHealth), barDim.h))
         barDim.center = outDim.center
         if Cs.BLOOM:
             if bloomHealthBarCache is None:
@@ -62,7 +63,6 @@ class Manager:
         self.spaceships = list(args)
         self.bullets = []
         self.display = display
-        print('Init powerup')
         self.PowerUpManager = PowerUpManager()
         self.currentGravity = Cs.DEFAULTGRAVITY
         self.bulletCache = bulletCache
@@ -182,7 +182,7 @@ class Manager:
                     self.display.blit(*bloomOutline)
                     self.display.blit(*mainBar)
                 else:
-                    outline, mainBar = healthBar(ent.model, ent.health, self.healthBarCache)
+                    outline, mainBar = healthBar(ent.model, ent.health, self.healthBarCache, maxHealth=ent.maxHealth)
                     self.display.blit(*outline)
                     self.display.blit(*mainBar)
         self.display.blit(self.scanlines, (0, 0))
@@ -198,19 +198,16 @@ class PowerUpManager:
         PowerImageFilePaths = PowerPath.rglob('*[0-9].png')
         self.PowerCache = {pth: pygame.image.load(str(pth)).convert_alpha() for pth in PowerImageFilePaths}
         self.Powers = list(PowerUp.__subclasses__())
-        print(self.Powers)
 
         def ProbGetter(inPower: PowerUp) -> float:
-            print(inPower.probability)
             return inPower.probability
 
-        self.Probabilities = map(ProbGetter, self.Powers)
+        self.Probabilities = list(map(ProbGetter, self.Powers))
         self.spawnInterval = Cs.PowerUpSpawnInterval
         self.despawnInterval = Cs.PowerUpDespawnInterval
         self.spawnedPowerUps = []
 
     def caller(self, n):
-        print('INIT',n)
         return n(self.PowerCache)
 
     def updatePowerUps(self):
@@ -225,8 +222,8 @@ class PowerUpManager:
         if self.spawnInterval == 1:
             self.spawnedPowerUps.clear()
             self.spawnInterval = Cs.PowerUpSpawnInterval
-            newPowers = choices(self.Powers, self.Probabilities, k=randint(*Cs.PowerUpSpawnRange))
-            newPowers = map(self.caller, newPowers)
+            # newPowers = choices(self.Powers, self.Probabilities, k=randint(*Cs.PowerUpSpawnRange))
+            # newPowers = map(self.caller, newPowers)
             # self.spawnedPowerUps.extend(newPowers)
         else:
             self.spawnInterval -= 1

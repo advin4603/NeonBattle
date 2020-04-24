@@ -9,7 +9,8 @@ BLOOM:bool = False
 spacehipUpdateInterval: int = 10  # Time is in number of Frames
 spaceshipScaleConst = bulletScaleConst = healthBarScaleConst = RESOLUTION[0] / 3840, RESOLUTION[1] / 2160
 bulletUpdateInterval: int = 10  # Time is in number of Frames
-DEFAULTDAMAGE: float = 0.5
+DEFAULTMAXHEALTH = 1000
+DEFAULTDAMAGE: float = 10
 DEFAULTDAMAGEDAMP: float = 1.
 SPEEDLIMIT: float = 520 / FPS
 THRUST: float = -20 / FPS
@@ -34,7 +35,7 @@ elif RESOLUTION == (1920., 1080.):
     FRAME = ([240.0, 1680.0], [284.0, 796.0])
     GameStage = FRAME
 
-GRAVITYON = True
+GRAVITYON = False
 if GRAVITYON:
     DEFAULTGRAVITY: numpy.array = numpy.array([0., 12 / FPS])
     SPEEDLIMIT: None = None

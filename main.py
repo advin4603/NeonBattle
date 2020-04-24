@@ -1,9 +1,15 @@
 from manager import *
 import struct
+import traceback
 
 from pygame.locals import *
 
-import moderngl
+try:
+    import moderngl
+except:
+    with open('Traceback.txt', 'w') as file:
+        traceback.print_exc(file=file)
+    input()
 
 old = '''
         #version 300 es

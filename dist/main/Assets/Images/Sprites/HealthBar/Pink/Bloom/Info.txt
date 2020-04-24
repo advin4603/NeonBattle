@@ -1,3 +1,0 @@
-Intended for:3840,2160
-PinkOutline Actual:5268,624
-Pink1 Actual:5012,408

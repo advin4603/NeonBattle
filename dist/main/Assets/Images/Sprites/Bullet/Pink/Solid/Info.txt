@@ -1,2 +1,0 @@
-Intended for:3840,2160
-Actual:33,144

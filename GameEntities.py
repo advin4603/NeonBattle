@@ -91,7 +91,7 @@ class Spaceship(Entities.Entity):
         self.bloomSprite = Sprite.Sprite(self.bloomImages, Cs.spaceshipScaleConst, Cs.spacehipUpdateInterval,
                                          (pos[0], pos[1]))
         self.thrustOn = False
-        self.health = 1
+        self.health = self.maxHealth = Cs.DEFAULTMAXHEALTH
         self.damagePerBullet = Cs.DEFAULTDAMAGE
         self.bulletSpeed = Cs.DEFAULTBULLETSPEED
         self.thrustKey = moveset['THRUST']

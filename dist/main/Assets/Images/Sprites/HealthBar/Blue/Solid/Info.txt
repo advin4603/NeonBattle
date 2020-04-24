@@ -1,3 +1,0 @@
-Intended for:3840,2160
-BlueOutline Actual:1317,156
-Blue1 Actual:1253,102
