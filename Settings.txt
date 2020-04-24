@@ -1,6 +1,6 @@
 # Settings for NeonBattle
 
-FULLSCREEN = true
+FULLSCREEN = false
 BLOOM = true
 GRAVITY = false
 CRT effect = true

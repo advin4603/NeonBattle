@@ -84,7 +84,10 @@ try:
     if Cs.WINDOWED:
         pygame.display.set_mode(REAL_RES, DOUBLEBUF | OPENGL)
     else:
-        pygame.display.set_mode(REAL_RES, DOUBLEBUF | OPENGL | FULLSCREEN)
+        pygame.display.set_mode(REAL_RES, DOUBLEBUF | OPENGL | FULLSCREEN | HWSURFACE)
+    pygame.display.set_caption('NeonBattle 1.0.5')
+    icon = pygame.image.load('Assets\\Images\\Icons\\NeonBattle.ico')
+    pygame.display.set_icon(icon)
     pygame.mouse.set_visible(False)
     player1 = GameEntities.PinkSpaceship(numpy.array([Cs.RESOLUTION[0] / 2. - 400, Cs.RESOLUTION[1] / 2 - 400]), 0,
                                          {'THRUST': pygame.K_w, 'LEFT': pygame.K_a, 'RIGHT': pygame.K_d,

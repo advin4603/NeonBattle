@@ -1,0 +1,7 @@
+# Settings for NeonBattle
+
+FULLSCREEN = false
+BLOOM = true
+GRAVITY = false
+CRT effect = true
+SCANLINES = false
