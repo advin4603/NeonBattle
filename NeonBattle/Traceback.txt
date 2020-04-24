@@ -1,6 +1,6 @@
 Traceback (most recent call last):
   File "main.py", line 188, in <module>
   File "manager.py", line 193, in completeCycle
-  File "manager.py", line 100, in InputCheck
+  File "manager.py", line 127, in InputCheck
 SystemExit
 
