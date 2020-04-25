@@ -8,6 +8,7 @@ import pygame
 import numpy
 from typing import Tuple, Dict
 from random import uniform
+from math import pi
 
 
 # PowerPath = Path('Assets') / Path('Images') / Path('Sprites') / Path('PowerUps')
@@ -43,12 +44,17 @@ class PowerUp(Entities.Entity):
         if Cs.BLOOM:
             self.bloomSprite.draw(screen)
 
-    def hit(self, bullet: Bullet):
+    def hit(self, bullet: Bullet, manager):
+        """
+        :type manager: manager.Manager
+        :type bullet: Bullet
+        """
         pass
 
 
 class Health(PowerUp):
-    probability = 10
+    probability = Cs.Health
+
     def __init__(self, powerCache):
         self.model = 'Health'
         self.spawnRangeX = Cs.GameStage[0]
@@ -56,9 +62,43 @@ class Health(PowerUp):
         self.probability = 10
         self.x = uniform(*self.spawnRangeX)
         self.y = uniform(*self.spawnRangeY)
-        self.healBy = 0.5
+        self.healBy = Cs.HEALTHPOWER
         super().__init__(numpy.array([self.x, self.y]), self.model, Cs.bulletScaleConst, 1, self.probability,
                          powerCache)
 
-    def hit(self, bullet: Bullet):
-        bullet.parent.health += (1 - bullet.parent.health) * self.healBy
+    def hit(self, bullet: Bullet, manager):
+        """
+        :type manager: manager.Manager
+        :type bullet: Bullet
+        """
+        bullet.parent.health += (bullet.parent.maxHealth - bullet.parent.health) * self.healBy
+
+
+class RandomGravity(PowerUp):
+    probability = Cs.RandomGravity
+
+    def __init__(self, powerCache):
+        self.model = 'Health'
+        self.spawnRangeX = Cs.GameStage[0]
+        self.spawnRangeY = Cs.GameStage[1]
+        self.probability = 10
+        self.x = uniform(*self.spawnRangeX)
+        self.y = uniform(*self.spawnRangeY)
+        self.gravDir = uniform(0, 2 * pi)
+        super().__init__(numpy.array([self.x, self.y]), self.model, Cs.bulletScaleConst, 1, self.probability,
+                         powerCache)
+
+    def hit(self, bullet: Bullet, manager):
+        """
+        :type manager: manager.Manager
+        :type bullet: Bullet
+        """
+        manager.currentGravity += Cs.GRAVSCALAR * numpy.array([numpy.cos(self.gravDir), numpy.sin(self.gravDir)])
+        if manager.currentGravity[0] != 0 and manager.currentGravity[1] != 0:
+            for ship in manager.spaceships:
+                ship.velLimitScalar = None
+                ship.bulletSpeed = Cs.GRAVBULLETSPEED
+        else:
+            for ship in manager.spaceships:
+                ship.velLimitScalar = Cs.SPEEDLIMIT
+                ship.bulletSpeed = Cs.DEFAULTBULLETSPEED

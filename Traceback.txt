@@ -1,9 +1,9 @@
 Traceback (most recent call last):
   File "F:/Pycharm_projects/NeonBattle/main.py", line 188, in <module>
     man.completeCycle()
-  File "F:\Pycharm_projects\NeonBattle\manager.py", line 193, in completeCycle
+  File "F:\Pycharm_projects\NeonBattle\manager.py", line 200, in completeCycle
     func()
-  File "F:\Pycharm_projects\NeonBattle\manager.py", line 96, in InputCheck
+  File "F:\Pycharm_projects\NeonBattle\manager.py", line 100, in InputCheck
     sys.exit()
 SystemExit
 

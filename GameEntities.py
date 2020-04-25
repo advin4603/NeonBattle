@@ -18,7 +18,7 @@ from typing import Dict
 class Bullet(Entities.Entity):
 
     def __init__(self, pos: numpy.array, angle: float, model: str, parent: Spaceship, bulletSpeed: float,
-                 killOnImpact: bool, bulletCache: Dict[Path, pygame.Surface]):
+                 killOnImpact: bool, bulletCache: Dict[Path, pygame.Surface],speedLim):
         self.pos = pos + Cs.BULLETSPAWNDIST * numpy.array([sin(radians(angle)), cos(radians(angle))])
         self.angularDisplacement = angle
         self.parent = parent
@@ -51,7 +51,7 @@ class Bullet(Entities.Entity):
         super().__init__(posVector=self.pos,
                          velVector=bulletSpeed * self.headDirectionVector,
                          sprite=self.Sprite, angularDisplacement=angle,
-                         angularSpeed=0, angularAcc=0)
+                         angularSpeed=0, angularAcc=0,limVelScalar=speedLim)
 
     def Update(self, acc: numpy.array = None, angularAcc: float = None):
         if self.offScreen:
@@ -94,6 +94,9 @@ class Spaceship(Entities.Entity):
         self.health = self.maxHealth = Cs.DEFAULTMAXHEALTH
         self.damagePerBullet = Cs.DEFAULTDAMAGE
         self.bulletSpeed = Cs.DEFAULTBULLETSPEED
+        if Cs.GRAVITYON:
+            self.bulletSpeed = Cs.GRAVBULLETSPEED
+        self.bulletSpeedLim = Cs.BULLETSPEEDLIMIT
         self.thrustKey = moveset['THRUST']
         self.leftKey = moveset['LEFT']
         self.rightKey = moveset['RIGHT']
@@ -134,10 +137,16 @@ class Spaceship(Entities.Entity):
         """
         newBullet = Bullet(self.pos + self.headDirectionVector * self.spriteGroup.currentRect.h / 2,
                            self.angularDisplacement, self.model, self,
-                           self.bulletSpeed, not self.piercingBullets, bulletCache)
+                           self.bulletSpeed, not self.piercingBullets, bulletCache, speedLim=self.bulletSpeedLim)
         manager.addBullet(newBullet)
 
-    def hit(self, bullet: Bullet):
+    def hit(self, bullet, manager):
+        """
+
+        :param bullet:Bullet
+        :param manager: manager.Manager
+        :return:
+        """
         self.health = round(self.health - bullet.damage * self.damageDamp, 1)
 
     def Update(self, acc: numpy.array = None, angularAcc: float = None):

@@ -2,6 +2,8 @@ from typing import Tuple, List, Union, Dict
 import numpy
 from math import floor
 from Reader import reader
+from random import uniform
+from math import pi
 
 settings: Union[Dict[str, bool], Dict[str, None]] = reader('Settings.txt')
 FPS: int = 60
@@ -44,10 +46,14 @@ ROTATELIM: float = 540 / FPS
 ROTATETHRUST: float = 12 / FPS
 AngularDAMP: float = 0.08
 BULLETSPAWNDIST: float = -150
+BULLETSPEEDLIMIT:float = 3 * SPEEDLIMIT
 DEFAULTBULLETSPEED: float = -2 * SPEEDLIMIT
+GRAVBULLETSPEED:float = -3 * SPEEDLIMIT
 PowerUpSpawnInterval: int = FPS * 1
 PowerUpDespawnInterval: int = FPS * 20
 PowerUpSpawnRange: Tuple[int, int] = 2, 5
+HEALTHPOWER = 0.5
+
 if RESOLUTION == (1280., 720.):
     healthBarLeftDistance = 50
     healthBarTopDistance = 50
@@ -65,9 +71,17 @@ if 'GRAVITY' in settings and settings['GRAVITY'] is not None:
     GRAVITYON = settings['GRAVITY']
 else:
     GRAVITYON = False
+DEFAULTGRAVITY: numpy.array = numpy.array([0., 12 / FPS])
+GRAVSCALAR = numpy.sqrt(DEFAULTGRAVITY.dot(DEFAULTGRAVITY))
+
 
 if GRAVITYON:
-    DEFAULTGRAVITY: numpy.array = numpy.array([0., 12 / FPS])
+    gravDir = uniform(0, 2 * pi)
+    DEFAULTGRAVITY: numpy.array = GRAVSCALAR * numpy.array([numpy.cos(gravDir), numpy.sin(gravDir)])
     SPEEDLIMIT: None = None
 else:
     DEFAULTGRAVITY: numpy.array = numpy.array([0., 0.])
+
+# Power Up Probabilities
+Health = 10
+RandomGravity = 2

@@ -149,15 +149,18 @@ class Manager:
 
         popTheseBullets = []
         popTheseSpaceships = []
+        popThesePowers = []
         for index, bullet in enumerate(self.bullets):
             for shipIndex, ent in enumerate(self.spaceships + self.PowerUpManager.spawnedPowerUps):
 
                 if bullet in ent:
 
-                    ent.hit(bullet)
+                    ent.hit(bullet,self)
                     if isinstance(ent, GameEntities.Spaceship):
                         if ent.health <= 0:
                             popTheseSpaceships.append(shipIndex)
+                    else:
+                        popThesePowers.append(shipIndex-len(self.spaceships))
 
                     if bullet.killOnImpact:
                         popTheseBullets.append(index)
@@ -169,6 +172,10 @@ class Manager:
         for ind in sorted(list(set(popTheseSpaceships)), reverse=True):
             if ind < len(self.spaceships):
                 del self.spaceships[ind]
+
+        for ind in sorted(list(set(popThesePowers)), reverse=True):
+            if ind < len(self.PowerUpManager.spawnedPowerUps):
+                del self.PowerUpManager.spawnedPowerUps[ind]
 
     def draw(self):
         for ent in self.PowerUpManager.spawnedPowerUps + self.spaceships + self.bullets:
