@@ -78,7 +78,7 @@ class RandomGravity(PowerUp):
     probability = Cs.RandomGravity
 
     def __init__(self, powerCache):
-        self.model = 'Health'
+        self.model = 'RandomGravity'
         self.spawnRangeX = Cs.GameStage[0]
         self.spawnRangeY = Cs.GameStage[1]
         self.probability = 10

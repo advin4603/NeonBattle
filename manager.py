@@ -230,9 +230,9 @@ class PowerUpManager:
         if self.spawnInterval == 1:
             self.spawnedPowerUps.clear()
             self.spawnInterval = Cs.PowerUpSpawnInterval
-            # newPowers = choices(self.Powers, self.Probabilities, k=randint(*Cs.PowerUpSpawnRange))
-            # newPowers = map(self.caller, newPowers)
-            # self.spawnedPowerUps.extend(newPowers)
+            newPowers = choices(self.Powers, self.Probabilities, k=randint(*Cs.PowerUpSpawnRange))
+            newPowers = map(self.caller, newPowers)
+            self.spawnedPowerUps.extend(newPowers)
         else:
             self.spawnInterval -= 1
 

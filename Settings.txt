@@ -1,17 +1,17 @@
 # Settings for NeonBattle
 
 # Fullscreen mode tends to increase performance.
-FULLSCREEN = true
+FULLSCREEN = false
 
 # Bloom effect causes glowing effect.
 # A bit Heavy on the CPU
 BLOOM = true
 
 # Gravity will simulate downwards pull on all moving bodies.
-GRAVITY = true
+GRAVITY = false
 
 # crt effects create an old tv effect with scanlines.
 # CRT Effects run on the GPU
 # Scanlines is a bit heavy on the CPU.
 CRT effect = true
-SCANLINES = true
+SCANLINES = false
