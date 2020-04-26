@@ -3,7 +3,7 @@ Traceback (most recent call last):
     man.completeCycle()
   File "F:\Pycharm_projects\NeonBattle\manager.py", line 200, in completeCycle
     func()
-  File "F:\Pycharm_projects\NeonBattle\manager.py", line 127, in InputCheck
+  File "F:\Pycharm_projects\NeonBattle\manager.py", line 100, in InputCheck
     sys.exit()
 SystemExit
 
